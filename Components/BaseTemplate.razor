@@ -1,0 +1,8 @@
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public object Data { get; set; }
+}
+
+<div class="bg-white rounded-xl shadow-2xl mx-auto border border-gray-100" style="width: 840px; min-height: 1100px; max-width: 95vw;">
+    @ChildContent
+</div>

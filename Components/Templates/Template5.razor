@@ -1,0 +1,141 @@
+@namespace BlazorInvoiceGenerator.Components.Templates
+@using BlazorInvoiceGenerator.Utils
+
+<BaseTemplate Data="@Data">
+    @foreach (var page in GetPagedItems(InvoiceData.Items, 15))
+    {
+        <div style="width: 816px; min-width: 816px; max-width: 816px; height: 1056px; min-height: 1056px; max-height: 1056px; background: white; margin: 0 auto; box-sizing: border-box; padding: 48px; display: flex; flex-direction: column; page-break-after: always;">
+            @if (page.PageIndex == 0)
+            {
+                <!-- Professional Invoice Header (only on first page) -->
+                <div style="color: black; border-radius: 0; border: none; box-shadow: none; flex: 1 1 auto;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 2rem; align-items: flex-end; min-height: 120px;">
+                        <div>
+                            <div style="font-size: 2rem; font-weight: bold;">@InvoiceData.YourCompany?.Name</div>
+                            <div style="font-size: 0.875rem; display: flex; align-items: center;">
+                                <span style="margin-right: 0.5rem; color: #6b7280;">📍</span>
+                                <span>@InvoiceData.YourCompany?.Address</span>
+                            </div>
+                            <div style="font-size: 0.875rem; display: flex; align-items: center;">
+                                <span style="margin-right: 0.5rem; color: #6b7280;">📞</span>
+                                <span>@InvoiceData.YourCompany?.Phone</span>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 1.25rem; font-weight: bold;">Invoice Number: <span style="font-weight: bold;">@InvoiceData.Invoice?.Number</span></div>
+                            <div style="font-size: 0.875rem;">Date: <span style="font-weight: bold;">@(InvoiceData.Invoice?.Date.ToString("yyyy-MM-dd") ?? "N/A")</span></div>
+                            <div style="font-size: 0.875rem;">Due Date: <span style="font-weight: bold;">@(InvoiceData.Invoice?.PaymentDate.ToString("yyyy-MM-dd") ?? "N/A")</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Bill To and Ship To Row -->
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 2rem;">
+                        <div>
+                            <div style="font-size: 0.875rem; font-weight: bold; display: flex; align-items: center;">
+                                <span style="margin-right: 0.5rem; color: #6b7280;">💼</span>
+                                <span>Bill To:</span>
+                            </div>
+                            <div style="font-size: 0.875rem;">@InvoiceData.BillTo?.Name</div>
+                            <div style="font-size: 0.875rem;">@InvoiceData.BillTo?.Address</div>
+                            <div style="font-size: 0.875rem;">@InvoiceData.BillTo?.Phone</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.875rem; font-weight: bold; display: flex; align-items: center; justify-content: flex-end;">
+                                <span style="margin-right: 0.5rem; color: #6b7280;">🚚</span>
+                                <span>Ship To:</span>
+                            </div>
+                            <div style="font-size: 0.875rem;">@InvoiceData.ShipTo?.Name</div>
+                            <div style="font-size: 0.875rem;">@InvoiceData.ShipTo?.Address</div>
+                            <div style="font-size: 0.875rem;">@InvoiceData.ShipTo?.Phone</div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Items Table -->
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">
+                <thead>
+                    <tr style="background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+                        <th style="padding: 0.75rem; text-align: left; font-size: 0.875rem; font-weight: bold;">ID</th>
+                        <th style="padding: 0.75rem; text-align: left; font-size: 0.875rem; font-weight: bold;">Description</th>
+                        <th style="padding: 0.75rem; text-align: left; font-size: 0.875rem; font-weight: bold;">Model</th>
+                        <th style="padding: 0.75rem; text-align: center; font-size: 0.875rem; font-weight: bold;">Quantity</th>
+                        <th style="padding: 0.75rem; text-align: right; font-size: 0.875rem; font-weight: bold;">Rate</th>
+                        <th style="padding: 0.75rem; text-align: right; font-size: 0.875rem; font-weight: bold;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < page.Items.Count; i++)
+                    {
+                        var item = page.Items[i];
+                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                            <td style="padding: 0.75rem; text-align: left; font-size: 0.875rem;">@(i + 1 + page.PageIndex * 15)</td>
+                            <td style="padding: 0.75rem; text-align: left; font-size: 0.875rem;">
+                                @item.Name<br />
+                                <span style="font-size: 0.75rem; color: #6b7280;">@item.Description</span>
+                            </td>
+                            <td style="padding: 0.75rem; text-align: left; font-size: 0.875rem;">@item.Model</td>
+                            <td style="padding: 0.75rem; text-align: center; font-size: 0.875rem;">@item.Quantity</td>
+                            <td style="padding: 0.75rem; text-align: right; font-size: 0.875rem;">@FormatCurrency(item.Amount, InvoiceData.SelectedCurrency)</td>
+                            <td style="padding: 0.75rem; text-align: right; font-size: 0.875rem;">@FormatCurrency(item.Total, InvoiceData.SelectedCurrency)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            @if (page.PageIndex == page.TotalPages - 1)
+            {
+                <!-- Summary Section -->
+                <div style="width: 100%; display: flex; justify-content: flex-end;">
+                    <div style="text-align: right; margin: 2.5rem 0 1.5rem 0; padding: 1.5rem 2.5rem 1.5rem 1.5rem; border-radius: 12px; background: #f9fafb; min-width: 320px; box-shadow: 0 2px 12px 0 rgba(0,0,0,0.08);">
+                        <div style="font-size: 0.95rem; margin-bottom: 0.5rem;">Subtotal: <span style="font-weight: bold;">@FormatCurrency(InvoiceData.SubTotal, InvoiceData.SelectedCurrency)</span></div>
+                        @if (InvoiceData.TaxPercentage > 0)
+                        {
+                            <div style="font-size: 0.95rem; margin-bottom: 0.5rem;">Tax (@InvoiceData.TaxPercentage%): <span style="font-weight: bold;">@FormatCurrency(InvoiceData.TaxAmount, InvoiceData.SelectedCurrency)</span></div>
+                        }
+                        <div style="font-size: 1.15rem; font-weight: bold; color: black; margin-top: 0.75rem;">Total: <span>@FormatCurrency(InvoiceData.GrandTotal, InvoiceData.SelectedCurrency)</span></div>
+                    </div>
+                </div>
+                <!-- Notes Section -->
+                @if (!string.IsNullOrEmpty(InvoiceData.Notes))
+                {
+                    <div style="font-size: 0.875rem; margin-bottom: 2rem;">
+                        <div style="font-weight: bold; display: flex; align-items: center;">
+                            <span style="margin-right: 0.5rem; color: #6b7280;">📝</span>
+                            <span>Notes:</span>
+                        </div>
+                        <div>@InvoiceData.Notes</div>
+                    </div>
+                }
+                <!-- Footer -->
+                <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid #e5e7eb; text-align: center; margin-bottom: 2.5rem;">
+                    <p style="font-size: 0.75rem; color: black; margin: 0;">Thank you for your business!</p>
+                </div>
+            }
+        </div>
+    }
+</BaseTemplate>
+
+@code {
+    [Parameter] public object Data { get; set; }
+    private InvoiceData InvoiceData => Data as InvoiceData ?? new InvoiceData();
+
+    private string FormatCurrency(decimal amount, string? currency)
+    {
+        // Always use USD formatting
+        return string.Format("{0:C}", amount);
+    }
+
+    private IEnumerable<(int PageIndex, int TotalPages, List<ItemInfo> Items)> GetPagedItems(List<ItemInfo> items, int itemsPerPage)
+    {
+        if (items == null || items.Count == 0)
+            yield return (0, 1, new List<ItemInfo>());
+        else
+        {
+            int totalPages = (int)Math.Ceiling(items.Count / (double)itemsPerPage);
+            for (int i = 0; i < totalPages; i++)
+            {
+                yield return (i, totalPages, items.Skip(i * itemsPerPage).Take(itemsPerPage).ToList());
+            }
+        }
+    }
+}

@@ -1,0 +1,428 @@
+@page "/invoice-builder"
+@page "/invoice-builder/{templateId:int?}"
+@using BlazorInvoiceGenerator.Utils
+@using BlazorInvoiceGenerator.Components
+@using BlazorInvoiceGenerator.Services
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@inject InvoiceDataService InvoiceDataService
+
+<PageTitle>Invoice Builder</PageTitle>
+
+<div class="invoice-builder">
+    <div class="container">
+        <div class="header">
+            <h1>Invoice Builder</h1>
+            <p>Create professional invoices with our beautiful templates</p>
+        </div>
+
+        <div class="grid">
+            <!-- Left Column: Invoice Details (Compact Layout) -->
+            <div>
+                <div class="card scrollable">
+                    <div class="card-header">
+                        <h2>Invoice Details</h2>
+                    </div>
+
+                    <!-- Currency & Basic Info -->
+                    <div class="compact-section">
+                        <h3>Basic Invoice Info</h3>
+                        <!-- Currency selector removed - always using USD -->
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 0.25rem; color: #374151;">Currency: USD ($)</label>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0.75rem;">
+                            <label for="invoiceNumber" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Invoice Number</label>
+                            <input class="form-input" placeholder="INV-001" @bind="invoiceData.Invoice.Number" @bind:after="OnDataChanged" name="invoiceNumber" id="invoiceNumber" />
+                        </div>
+                        <div class="two-column">
+                            <div class="form-group">
+                                <label for="invoiceDate" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Invoice Date</label>
+                                <input class="form-input" type="date" @bind="invoiceData.Invoice.Date" @bind:after="OnDataChanged" name="invoiceDate" id="invoiceDate" />
+                            </div>
+                            <div class="form-group">
+                                <label for="dueDate" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Due Date</label>
+                                <input class="form-input due-date-input" type="date" @bind="invoiceData.Invoice.PaymentDate" @bind:after="OnDataChanged" name="dueDate" id="dueDate" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Company Information -->
+                    <div class="compact-section">
+                        <h3>Your Company</h3>
+                        <label for="companyName" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Company Name</label>
+                        <input class="form-input" placeholder="Company Name" @bind="invoiceData.YourCompany.Name" @bind:after="OnDataChanged" name="companyName" id="companyName" />
+                        <div class="two-column">
+                            <label for="companyAddress" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Address</label>
+                            <input class="form-input" placeholder="Address" @bind="invoiceData.YourCompany.Address" @bind:after="OnDataChanged" name="companyAddress" id="companyAddress" />
+                            <label for="companyPhone" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Phone</label>
+                            <input class="form-input" placeholder="Phone" @bind="invoiceData.YourCompany.Phone" @bind:after="OnDataChanged" name="companyPhone" id="companyPhone" />
+                        </div>
+                    </div>
+
+                    <!-- Bill To -->
+                    <div class="compact-section">
+                        <h3>Bill To</h3>
+                        <label for="billToName" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Client Name</label>
+                        <input class="form-input" placeholder="Client Name" @bind="invoiceData.BillTo.Name" @bind:after="OnDataChanged" name="billToName" id="billToName" />
+                        <div class="two-column">
+                            <label for="billToAddress" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Address</label>
+                            <input class="form-input" placeholder="Address" @bind="invoiceData.BillTo.Address" @bind:after="OnDataChanged" name="billToAddress" id="billToAddress" />
+                            <label for="billToPhone" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Phone</label>
+                            <input class="form-input" placeholder="Phone" @bind="invoiceData.BillTo.Phone" @bind:after="OnDataChanged" name="billToPhone" id="billToPhone" />
+                        </div>
+                    </div>
+
+                    <!-- Ship To -->
+                    <div class="compact-section">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+
+                            <h3 style="margin: 0;">Ship To</h3>
+                            <label class="checkbox" for="sameAsBillTo">
+                                <input type="checkbox" @onchange="OnSameAsBillToChanged" name="sameAsBillTo" id="sameAsBillTo" />
+                                <span class="checkbox-text">Same as Bill To</span>
+                            </label>
+                        </div>
+                        <label for="shipToName" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Name</label>
+                        <input class="form-input" placeholder="Name" @bind="invoiceData.ShipTo.Name" @bind:after="OnDataChanged" name="shipToName" id="shipToName" />
+                        <div class="two-column">
+                            <label for="shipToAddress" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Address</label>
+                            <input class="form-input" placeholder="Address" @bind="invoiceData.ShipTo.Address" @bind:after="OnDataChanged" name="shipToAddress" id="shipToAddress" />
+                            <label for="shipToPhone" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Phone</label>
+                            <input class="form-input" placeholder="Phone" @bind="invoiceData.ShipTo.Phone" @bind:after="OnDataChanged" name="shipToPhone" id="shipToPhone" />
+                        </div>
+                    </div>
+
+                    <!-- Items -->
+                    <div class="compact-section">
+                        <h3>Items</h3>
+                        
+                        @if (invoiceData.Items != null && invoiceData.Items.Count > 0)
+                        {
+                            <div class="item-list">
+                                @for (int idx = 0; idx < invoiceData.Items.Count; idx++)
+                                {
+                                    var item = invoiceData.Items[idx];
+                                    var currentIdx = idx;
+                                    <div class="item-card">
+                                        <div class="item-info">
+                                            <label for="itemName_@idx" style="display:none">Item Name</label>
+                                            <div class="item-name">
+                                                <input class="form-input" id="itemName_@idx" name="itemName_@idx" value="@item.Name" readonly />
+                                            </div>
+                                            <label for="itemDescription_@idx" style="display:none">Description</label>
+                                            <div class="item-description">
+                                                <input class="form-input" id="itemDescription_@idx" name="itemDescription_@idx" value="@item.Description" readonly />
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(item.Model))
+                                            {
+                                                <label for="itemModel_@idx" style="display:none">Model</label>
+                                                <div class="item-model" style="font-size: 0.75rem; color: #9ca3af; font-style: italic;">
+                                                    <input class="form-input" id="itemModel_@idx" name="itemModel_@idx" value="@item.Model" readonly />
+                                                </div>
+                                            }
+                                            <label for="itemQty_@idx" style="display:none">Quantity</label>
+                                            <label for="itemAmount_@idx" style="display:none">Amount</label>
+                                            <label for="itemTotal_@idx" style="display:none">Total</label>
+                                            <div class="item-details">
+                                                <input class="form-input" id="itemQty_@idx" name="itemQty_@idx" value="@item.Quantity" readonly /> ×
+                                                <input class="form-input" id="itemAmount_@idx" name="itemAmount_@idx" value="@item.Amount" readonly /> =
+                                                <input class="form-input" id="itemTotal_@idx" name="itemTotal_@idx" value="@item.Total" readonly />
+                                            </div>
+                                        </div>
+                                        <button class="remove-btn" @onclick="@(() => RemoveItem(currentIdx))">×</button>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <!-- Add Item Form -->
+                        <div class="add-item-form">
+                            <label for="itemName" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Item Name</label>
+                            <input class="form-input" placeholder="Item Name" @bind="newItem.Name" name="itemName" id="itemName" />
+                            <label for="itemDescription" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Description</label>
+                            <textarea class="form-textarea" rows="1" placeholder="Description" @bind="newItem.Description" name="itemDescription" id="itemDescription"></textarea>
+                            <label for="itemModel" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Model</label>
+                            <input class="form-input" placeholder="Model" @bind="newItem.Model" name="itemModel" id="itemModel" />
+                            <div class="three-column">
+                                <div>
+                                    <label for="itemQty" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Qty</label>
+                                    <input class="form-input" type="number" min="0" placeholder="Qty" @bind="newItem.Quantity" name="itemQty" id="itemQty" />
+                                </div>
+                                <div>
+                                    <label for="itemPrice" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Price</label>
+                                    <input class="form-input" type="number" min="0" step="0.01" placeholder="Price" @bind="newItem.Amount" name="itemPrice" id="itemPrice" />
+                                </div>
+                                <div>
+                                    <label for="itemTotal" style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Total</label>
+                                    <input class="form-input readonly" readonly value="@FormatCurrency(newItem.Quantity * newItem.Amount)" placeholder="Total" name="itemTotal" id="itemTotal" />
+                                </div>
+                            </div>
+                            <button class="btn btn-primary btn-full" @onclick="AddItem" disabled="@(string.IsNullOrWhiteSpace(newItem.Name) || newItem.Quantity <= 0 || newItem.Amount <= 0)">
+                                Add Item
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tax & Notes -->
+                    <div class="compact-section">
+                        <h3>Tax & Notes</h3>
+                        <div class="form-group" style="margin-bottom: 0.75rem;">
+                            <label style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Tax Rate (%)</label>
+                            <input class="form-input" type="number" min="0" max="100" step="0.1" @bind="invoiceData.TaxPercentage" @bind:after="UpdateTotals" name="taxRate" id="taxRate" />
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0.75rem;">
+                            <label style="display: block; font-weight: 500; margin-bottom: 0.25rem; color: #6b7280;">Additional Notes</label>
+                            <textarea class="form-textarea" rows="2" placeholder="Thank you for your business!" @bind="invoiceData.Notes" @bind:after="OnDataChanged" name="notes" id="notes"></textarea>
+                        </div>
+                        
+                        <!-- Summary -->
+                        <div class="summary-box">
+                            <div class="summary-row">
+                                <span>Subtotal:</span>
+                                <span>@FormatCurrency(invoiceData.SubTotal)</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Tax (@invoiceData.TaxPercentage%):</span>
+                                <span>@FormatCurrency(invoiceData.TaxAmount)</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span>Total:</span>
+                                <span>@FormatCurrency(invoiceData.GrandTotal)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Column: Template Selection -->
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Templates</h2>
+                    </div>
+                    
+                    <div class="template-grid">
+                        @for (int i = 1; i <= 13; i++)
+                        {
+                            var templateNum = i;
+                            <div class="template-card @(selectedTemplate == templateNum ? "selected" : "")" @onclick="@(() => SelectTemplate(templateNum))">
+                                <div class="template-preview gradient-@templateNum">
+                                    <span>@templateNum</span>
+                                </div>
+                                <div class="template-name">Template @templateNum</div>
+                                <div class="template-style">@GetTemplateStyle(templateNum)</div>
+                            </div>
+                        }
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Right Column: Live Preview (Optimized) -->
+            <div>
+                <div class="card scrollable">
+                    <div class="card-header">
+                        <h2>Live Preview</h2>
+                        <button class="btn btn-success" @onclick="PrintInvoice" style="margin-left: auto; font-size: 0.75rem; padding: 0.375rem 0.75rem;">
+                            Print
+                        </button>
+                        <button class="btn btn-success" @onclick="GeneratePDF" style="margin-left: 0.5rem; font-size: 0.75rem; padding: 0.375rem 0.75rem;">
+                            Download PDF
+                        </button>
+                        <button class="btn btn-gradient" @onclick="PreviewInvoice" style="margin-left: 0.5rem; font-size: 0.75rem; padding: 0.375rem 0.75rem;">
+                            Full Preview
+                        </button>
+                    </div>
+                    <div class="preview-container" id="preview-container" style="overflow-y: auto;">
+                        @for (int i = 1; i <= 13; i++)
+                        {
+                            <div id="template-preview-@i" style="@(i == selectedTemplate ? "" : "display:none;")">
+                                <InvoiceTemplate TemplateNumber="@i" Data="@invoiceData" />
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int? TemplateId { get; set; }
+    [SupplyParameterFromQuery] public int Template { get; set; }
+    
+    private InvoiceData invoiceData = new InvoiceData
+    {
+        YourCompany = new CompanyInfo { Name = "Sample Company", Address = "123 Main St", Phone = "555-1234" },
+        Invoice = new InvoiceInfo { Number = "INV-001", Date = DateTime.Now, PaymentDate = DateTime.Now.AddDays(30) },
+        BillTo = new PersonInfo { Name = "John Doe", Address = "456 Elm St", Phone = "555-5678" },
+        ShipTo = new PersonInfo { Name = "Jane Smith", Address = "789 Oak St", Phone = "555-9012" },
+        Items = new List<ItemInfo> { new ItemInfo { Name = "Widget", Description = "A useful widget", Model = "WDG-2024", Quantity = 2, Amount = 10.0m, Total = 20.0m } },
+        SubTotal = 20.0m,
+        TaxPercentage = 5.0m,
+        TaxAmount = 1.0m,
+        GrandTotal = 21.0m,
+        Notes = "Thank you for your business!",
+        SelectedCurrency = "USD"
+    };
+
+    private ItemInfo newItem = new ItemInfo();
+    private bool sameAsBillTo = false;
+    private int selectedTemplate = 1;
+
+    protected override void OnInitialized()
+    {
+        // Set template from URL parameter or route parameter
+        if (TemplateId.HasValue && TemplateId.Value >= 1 && TemplateId.Value <= 13)
+        {
+            selectedTemplate = TemplateId.Value;
+        }
+        else if (Template >= 1 && Template <= 13)
+        {
+            selectedTemplate = Template;
+        }
+
+        // Load data from service if available
+        var serviceData = InvoiceDataService.GetCurrentInvoiceData();
+        if (serviceData != null)
+        {
+            invoiceData = serviceData;
+        }
+        UpdateTotals();
+        // Ensure Live Preview is correct on first navigation
+        StateHasChanged();
+    }
+
+    private void OnCurrencyChange(string currency)
+    {
+        // Currency selector removed - always using USD
+        invoiceData.SelectedCurrency = "USD";
+        InvoiceDataService.UpdateInvoiceData(invoiceData);
+        StateHasChanged();
+    }
+
+    private void OnSameAsBillToChanged(ChangeEventArgs e)
+    {
+        sameAsBillTo = (bool)(e.Value ?? false);
+        if (sameAsBillTo)
+        {
+            invoiceData.ShipTo.Name = invoiceData.BillTo.Name;
+            invoiceData.ShipTo.Address = invoiceData.BillTo.Address;
+            invoiceData.ShipTo.Phone = invoiceData.BillTo.Phone;
+        }
+        InvoiceDataService.UpdateInvoiceData(invoiceData);
+        StateHasChanged();
+    }
+
+    private void SelectTemplate(int templateNumber)
+    {
+        selectedTemplate = templateNumber;
+        InvoiceDataService.UpdateInvoiceData(invoiceData);
+        StateHasChanged();
+    }
+
+    private void AddItem()
+    {
+        if (string.IsNullOrWhiteSpace(newItem.Name) || newItem.Quantity <= 0 || newItem.Amount <= 0)
+            return;
+
+        newItem.Total = newItem.Quantity * newItem.Amount;
+        invoiceData.Items ??= new List<ItemInfo>();
+        invoiceData.Items.Add(new ItemInfo
+        {
+            Name = newItem.Name,
+            Description = newItem.Description,
+            Model = newItem.Model,
+            Quantity = newItem.Quantity,
+            Amount = newItem.Amount,
+            Total = newItem.Total
+        });
+        
+        UpdateTotals();
+        newItem = new ItemInfo();
+        StateHasChanged();
+    }
+
+    private void RemoveItem(int idx)
+    {
+        if (invoiceData.Items != null && idx >= 0 && idx < invoiceData.Items.Count)
+        {
+            invoiceData.Items.RemoveAt(idx);
+            UpdateTotals();
+            StateHasChanged();
+        }
+    }
+
+    private void UpdateTotals()
+    {
+        invoiceData.SubTotal = invoiceData.Items?.Sum(i => i.Total) ?? 0;
+        invoiceData.TaxAmount = invoiceData.SubTotal * (invoiceData.TaxPercentage / 100);
+        invoiceData.GrandTotal = invoiceData.SubTotal + invoiceData.TaxAmount;
+        
+        // Update the service with current data
+        InvoiceDataService.UpdateInvoiceData(invoiceData);
+        StateHasChanged();
+    }
+
+    private void PreviewInvoice()
+    {
+        // Ensure data is saved to service before navigation
+        InvoiceDataService.UpdateInvoiceData(invoiceData);
+        Navigation.NavigateTo($"/invoice-preview/{selectedTemplate}");
+    }
+
+    private async Task GeneratePDF()
+    {
+        try 
+        {
+            // Ensure data is saved to service before PDF generation
+            InvoiceDataService.UpdateInvoiceData(invoiceData);
+            // Use the same JS interop as Full Preview for PDF generation
+            await JSRuntime.InvokeVoidAsync("generateTemplatePDF", selectedTemplate, invoiceData);
+        }
+        catch (Exception ex)
+        {
+            // Handle error - could show a toast or alert
+            Console.WriteLine($"PDF Generation Error: {ex.Message}");
+        }
+    }
+
+    private void OnDataChanged()
+    {
+        InvoiceDataService.UpdateInvoiceData(invoiceData);
+    }
+
+    private string FormatCurrency(decimal amount)
+    {
+        // Always use USD formatting
+        return $"${amount:N2}";
+    }
+
+    private string GetTemplateStyle(int templateNumber)
+    {
+        return templateNumber switch
+        {
+            1 => "Classic",
+            2 => "Minimal", 
+            3 => "Professional",
+            4 => "Simple",
+            5 => "Clean",
+            6 => "Modern",
+            7 => "Sleek",
+            8 => "Elegant",
+            9 => "Fresh",
+            10 => "Creative",
+            11 => "Bold",
+            12 => "Natural",
+            13 => "Modern Red",
+            _ => "Standard"
+        };
+    }
+
+    private async Task PrintInvoice()
+    {
+        // Use JavaScript interop to print the invoice content, always pass both id and template number
+        await JSRuntime.InvokeVoidAsync("printInvoiceContent", $"template-preview-{selectedTemplate}", selectedTemplate);
+    }
+}

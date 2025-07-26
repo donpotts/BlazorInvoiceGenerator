@@ -1,0 +1,246 @@
+@page "/viewinvoice/{templateNumber:int?}"
+@using BlazorInvoiceGenerator.Utils
+@using BlazorInvoiceGenerator.Components
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Invoice</PageTitle>
+
+<div class="min-h-screen bg-gray-50 py-10">
+    <div class="main-content">
+        <div class="grid" style="grid-template-columns: minmax(0,1fr) 320px; gap: 2rem;">
+            <!-- Left: Bill Form and Item Details -->
+            <div>
+                <div class="flex flex-col">
+                    <!-- Top bar -->
+                    <div class="flex flex-row items-center justify-between mb-6">
+                        <div>
+                            <button class="text-sm text-gray-700 hover:underline flex flex-row items-center" @onclick="GoBack">
+                                <span class="mr-1">&#8592;</span> Back
+                            </button>
+                        </div>
+                        <div class="flex-1 flex flex-row justify-center">
+                            <div class="gap-2 flex flex-row">
+                                <!-- Only show Template 1 button -->
+                                <a href="/viewinvoice/1">
+                                    <button class="px-4 py-1 rounded border text-sm transition @(templateNumber == 1 || templateNumber == null ? "bg-white border-blue-500 text-blue-700 font-semibold shadow" : "bg-white border-gray-200 text-gray-700 hover:border-blue-400")">
+                                        Template 1
+                                    </button>
+                                </a>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105" @onclick="DownloadPDF">
+                                ?? Download PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Company Info -->
+                    <div class="w-full mb-4">
+                        <h2 class="font-bold text-base mb-2">Your Company</h2>
+                        <div class="flex gap-2 mb-2">
+                            <input class="input w-1/2" placeholder="Name" @bind="SampleData.YourCompany.Name" name="companyName" id="companyName" />
+                            <input class="input w-1/2" placeholder="Phone" @bind="SampleData.YourCompany.Phone" name="companyPhone" id="companyPhone" />
+                        </div>
+                        <input class="input w-full mb-2" placeholder="Address" @bind="SampleData.YourCompany.Address" name="companyAddress" id="companyAddress" />
+                    </div>
+
+                    <!-- Bill To Info -->
+                    <div class="w-full mb-4">
+                        <h2 class="font-bold text-base mb-2">Bill To</h2>
+                        <div class="flex gap-2 mb-2">
+                            <input class="input w-1/2" placeholder="Name" @bind="SampleData.BillTo.Name" name="billToName" id="billToName" />
+                            <input class="input w-1/2" placeholder="Phone" @bind="SampleData.BillTo.Phone" name="billToPhone" id="billToPhone" />
+                        </div>
+                        <input class="input w-full mb-2" placeholder="Address" @bind="SampleData.BillTo.Address" name="billToAddress" id="billToAddress" />
+                    </div>
+
+                    <!-- Ship To Info with Same as Bill To -->
+                    <div class="w-full mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h2 class="font-bold text-base">Ship To</h2>
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" class="mr-2" @onchange="OnSameAsBillToChanged" name="sameAsBillTo" id="sameAsBillTo" />
+                                Same as Bill To
+                            </label>
+                        </div>
+                        <div class="flex gap-2 mb-2">
+                            <input class="input w-1/2" placeholder="Name" @bind="SampleData.ShipTo.Name" name="shipToName" id="shipToName" />
+                            <input class="input w-1/2" placeholder="Phone" @bind="SampleData.ShipTo.Phone" name="shipToPhone" id="shipToPhone" />
+                        </div>
+                        <input class="input w-full mb-2" placeholder="Address" @bind="SampleData.ShipTo.Address" name="shipToAddress" id="shipToAddress" />
+                    </div>
+
+                    <!-- Invoice Info -->
+                    <div class="w-full mb-4">
+                        <h2 class="font-bold text-base mb-2">Invoice Information</h2>
+                        <div class="flex gap-2 mb-2">
+                            <div class="flex-1">
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Invoice Number</label>
+                                <input class="input w-full" placeholder="INV-001" @bind="SampleData.Invoice.Number" name="invoiceNumber" id="invoiceNumber" />
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Invoice Date</label>
+                                <input class="input w-full" type="date" @bind="SampleData.Invoice.Date" name="invoiceDate" id="invoiceDate" />
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Due Date</label>
+                                <input class="input w-full" type="date" @bind="SampleData.Invoice.PaymentDate" name="dueDate" id="dueDate" />
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-500">Currency: USD ($)</div>
+                    </div>
+
+                    <!-- Item Details and Add Item Form -->
+                    <div class="flex flex-col items-center w-full max-w-2xl mx-auto mt-2 mb-2">
+                        <div class="w-full mb-2">
+                            <h2 class="font-bold text-base mb-2">Item Details</h2>
+                            @if (SampleData.Items != null && SampleData.Items.Count > 0)
+                            {
+                                @for (int idx = 0; idx < SampleData.Items.Count; idx++)
+                                {
+                                    var item = SampleData.Items[idx];
+                                    var currentIdx = idx;
+                                    <div class="flex flex-row flex-wrap gap-2 mb-2 items-center">
+                                        <input class="input w-1/3 bg-gray-100" readonly value="@item.Name" name="itemName_@idx" id="itemName_@idx" />
+                                        <input class="input w-20 bg-gray-100" readonly value="@item.Quantity" name="itemQty_@idx" id="itemQty_@idx" />
+                                        <input class="input w-24 bg-gray-100" readonly value="@item.Amount.ToString("0.##")" name="itemAmount_@idx" id="itemAmount_@idx" />
+                                        <input class="input w-24 bg-gray-100" readonly value="@item.Total.ToString("0.00")" name="itemTotal_@idx" id="itemTotal_@idx" />
+                                        <button class="btn-danger delete-btn" title="Delete" @onclick="(() => RemoveItem(currentIdx))">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="delete-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                        </button>
+                                        <input class="input w-full bg-gray-100" readonly value="@item.Description" name="itemDescription_@idx" id="itemDescription_@idx" />
+                                        @if (!string.IsNullOrEmpty(item.Model))
+                                        {
+                                            <input class="input w-full bg-gray-100" readonly value="Model: @item.Model" name="itemModel_@idx" id="itemModel_@idx" />
+                                        }
+                                    </div>
+                                }
+                            }
+                            <div class="flex flex-row flex-wrap gap-2 mb-2 items-center">
+                                <input class="input w-1/3" placeholder="Name" @bind="newItem.Name" name="newItemName" id="newItemName" />
+                                <input class="input w-20" type="number" min="0" placeholder="Quantity" @bind="newItem.Quantity" name="newItemQty" id="newItemQty" />
+                                <input class="input w-24" type="number" min="0" step="0.01" placeholder="Amount ($)" @bind="newItem.Amount" name="newItemAmount" id="newItemAmount" />
+                                <input class="input w-24 bg-gray-100 text-gray-700" type="text" readonly value="@((newItem.Quantity * newItem.Amount).ToString("0.00"))" placeholder="Total ($)" name="newItemTotal" id="newItemTotal" />
+                                <input class="input w-full mb-2" placeholder="Description" @bind="newItem.Description" name="newItemDescription" id="newItemDescription" />
+                                <input class="input w-full mb-2" placeholder="Model (optional)" @bind="newItem.Model" name="newItemModel" id="newItemModel" />
+                            </div>
+                            <button class="btn-primary text-sm font-semibold shadow disabled:opacity-60" @onclick="AddItem" disabled="@(string.IsNullOrWhiteSpace(newItem.Name) || newItem.Quantity <= 0 || newItem.Amount <= 0)">Add Item</button>
+                        </div>
+                    </div>
+
+                    <!-- Invoice Preview -->
+                    <div class="flex-1 flex flex-col items-center justify-start">
+                        <div class="invoice-preview mt-0 mb-10">
+                            <InvoiceTemplate TemplateNumber="1" Data="@SampleData" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Right: Template Gallery -->
+            <div class="bg-white rounded-xl shadow p-8 border border-gray-200" style="width:320px;min-width:180px;">
+                <h2 class="font-bold mb-4">Template Gallery</h2>
+                <div class="grid grid-cols-1 gap-4">
+                    <a href="/viewinvoice/1" class="block bg-gray-100 rounded-lg p-4 text-center border border-gray-200 hover:border-blue-400 transition">
+                        <img src="/images/template1.png" alt="Template 1" class="mx-auto mb-2 h-12 object-contain" />
+                        <div class="font-semibold">Template 1</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int? templateNumber { get; set; }
+
+    // Sample data for demonstration; replace with real data as needed
+    private InvoiceData SampleData = new InvoiceData {
+        YourCompany = new CompanyInfo { Name = "Sample Company", Address = "123 Main St", Phone = "555-1234" },
+        Invoice = new InvoiceInfo { Number = "INV-001", Date = DateTime.Now, PaymentDate = DateTime.Now.AddDays(30) },
+        BillTo = new PersonInfo { Name = "John Doe", Address = "456 Elm St", Phone = "555-5678" },
+        ShipTo = new PersonInfo { Name = "Jane Smith", Address = "789 Oak St", Phone = "555-9012" },
+        Items = new List<ItemInfo> { new ItemInfo { Name = "Widget", Description = "A useful widget", Model = "WDG-2024", Quantity = 2, Amount = 10.0m, Total = 20.0m } },
+        SubTotal = 20.0m,
+        TaxPercentage = 5.0m,
+        TaxAmount = 1.0m,
+        GrandTotal = 21.0m,
+        Notes = "Thank you for your business!",
+        SelectedCurrency = "USD"
+    };
+
+    private ItemInfo newItem = new ItemInfo();
+    private bool sameAsBillTo = false;
+
+    private void OnCurrencyChange(string currency)
+    {
+        // Currency selector removed - always using USD
+        SampleData.SelectedCurrency = "USD";
+        StateHasChanged();
+    }
+
+    private void OnSameAsBillToChanged(ChangeEventArgs e)
+    {
+        sameAsBillTo = (bool)(e.Value ?? false);
+        if (sameAsBillTo)
+        {
+            SampleData.ShipTo.Name = SampleData.BillTo.Name;
+            SampleData.ShipTo.Address = SampleData.BillTo.Address;
+            SampleData.ShipTo.Phone = SampleData.BillTo.Phone;
+        }
+    }
+
+    private void AddItem()
+    {
+        if (string.IsNullOrWhiteSpace(newItem.Name) || newItem.Quantity <= 0 || newItem.Amount <= 0)
+            return;
+        newItem.Total = newItem.Quantity * newItem.Amount;
+        SampleData.Items ??= new List<ItemInfo>();
+        SampleData.Items.Add(new ItemInfo {
+            Name = newItem.Name,
+            Description = newItem.Description,
+            Model = newItem.Model,
+            Quantity = newItem.Quantity,
+            Amount = newItem.Amount,
+            Total = newItem.Total
+        });
+        UpdateTotals();
+        newItem = new ItemInfo();
+    }
+
+    private void RemoveItem(int idx)
+    {
+        if (SampleData.Items != null && idx >= 0 && idx < SampleData.Items.Count)
+        {
+            SampleData.Items.RemoveAt(idx);
+            UpdateTotals();
+            StateHasChanged();
+        }
+    }
+
+    private void UpdateTotals()
+    {
+        SampleData.SubTotal = SampleData.Items?.Sum(i => i.Total) ?? 0;
+        SampleData.TaxAmount = SampleData.SubTotal * (SampleData.TaxPercentage / 100);
+        SampleData.GrandTotal = SampleData.SubTotal + SampleData.TaxAmount;
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private async Task DownloadPDF()
+    {
+        try 
+        {
+            // Call JavaScript function to generate PDF
+            await JSRuntime.InvokeVoidAsync("generatePDF", "invoice-preview", SampleData, 1);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"PDF Generation Error: {ex.Message}");
+        }
+    }
+}

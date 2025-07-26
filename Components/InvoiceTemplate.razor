@@ -1,0 +1,25 @@
+@using Microsoft.AspNetCore.Components
+@using BlazorInvoiceGenerator.Utils
+@using Microsoft.AspNetCore.Components
+
+@code {
+    [Parameter] public object Data { get; set; }
+    [Parameter] public int TemplateNumber { get; set; }
+
+    private Type? TemplateType { get; set; }
+    private Dictionary<string, object> Parameters => new() { { "Data", Data } };
+
+    protected override void OnParametersSet()
+    {
+        TemplateType = TemplateRegistry.GetTemplateType(TemplateNumber);
+    }
+}
+
+@if (TemplateType != null)
+{
+    <DynamicComponent Type="@TemplateType" Parameters="@Parameters" />
+}
+else
+{
+    <p>Template not found.</p>
+}

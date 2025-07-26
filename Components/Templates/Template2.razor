@@ -1,0 +1,202 @@
+﻿@using BlazorInvoiceGenerator.Utils
+@namespace BlazorInvoiceGenerator.Components.Templates
+@inherits BaseTemplate
+
+<BaseTemplate Data="@Data">
+    <div style="width: 816px; min-width: 816px; max-width: 816px; height: 1056px; min-height: 1056px; max-height: 1056px; background: white; margin: 0 auto; box-sizing: border-box; padding: 48px; display: flex; flex-direction: column; page-break-after: always;">
+        <!-- Professional Invoice Header -->
+        <div style="background: linear-gradient(135deg, #111827 0%, #374151 100%); color: white; padding: 3.5rem 2rem 2rem 2rem; border-radius: 8px 8px 0 0; overflow: hidden; min-height: 120px; display: flex; align-items: flex-end;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; width: 100%;">
+                <div>
+                    <h1 style="font-size: 2.5rem; font-weight: bold; margin: 0 0 0.5rem 0;">INVOICE</h1>
+                </div>
+                <div style="text-align: right;">
+                    <div style="color: #9ca3af; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Invoice Number</div>
+                    <div style="font-size: 1.5rem; font-weight: bold; margin-top: 0.25rem;">@InvoiceData.Invoice?.Number</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div style="padding: 2rem 0 0 0; flex: 1 1 auto; display: flex; flex-direction: column;">
+            <!-- Company, Bill/Ship To, etc. -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; margin-top: 0;">
+                <div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <span style="font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">From</span>
+                    </div>
+                    <div style="background: #f3f4f6; padding: 1rem; border-radius: 8px; border-left: 4px solid #111827;">
+                        <div style="font-size: 1.125rem; font-weight: bold; color: #111827; margin-bottom: 0.5rem;">@InvoiceData.YourCompany?.Name</div>
+                        <div style="font-size: 0.875rem; color: #4b5563;">
+                            <div style="display: flex; align-items: center; margin-bottom: 0.25rem;">
+                                <span style="margin-right: 0.5rem; color: #9ca3af;">📍</span>
+                                <span>@InvoiceData.YourCompany?.Address</span>
+                            </div>
+                            <div style="display: flex; align-items: center;">
+                                <span style="margin-right: 0.5rem; color: #9ca3af;">📞</span>
+                                <span>@InvoiceData.YourCompany?.Phone</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <span style="font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Invoice Details</span>
+                    </div>
+                    <div style="background: #e5e7eb; padding: 1rem; border-radius: 8px; border-left: 4px solid #111827;">
+                        <div style="font-size: 0.875rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span style="color: #4b5563;">Issue Date:</span>
+                                <span style="font-weight: 600; color: #111827;">@(InvoiceData.Invoice?.Date.ToString("MMM dd, yyyy") ?? "N/A")</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span style="color: #4b5563;">Due Date:</span>
+                                <span style="font-weight: 600, color: #111827;">@(InvoiceData.Invoice?.PaymentDate.ToString("MMM dd, yyyy") ?? "N/A")</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #4b5563;">Currency:</span>
+                                <span style="font-weight: 600; color: #111827;">US Dollar ($)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; margin-top: 0;">
+                <div>
+                    <div style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                        <span style="margin-right: 0.5rem; color: #6b7280;">💼</span>
+                        <span style="font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Bill To</span>
+                    </div>
+                    <div style="background: #f3f4f6; padding: 1rem; border-radius: 8px; border-left: 4px solid #6b7280;">
+                        <div style="font-size: 0.875rem; color: #111827;">
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">@InvoiceData.BillTo?.Name</div>
+                            <div style="color: #4b5563; margin-bottom: 0.25rem;">@InvoiceData.BillTo?.Address</div>
+                            <div style="color: #4b5563;">@InvoiceData.BillTo?.Phone</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                        <span style="margin-right: 0.5rem; color: #6b7280;">🚚</span>
+                        <span style="font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Ship To</span>
+                    </div>
+                    <div style="background: #f3f4f6; padding: 1rem; border-radius: 8px; border-left: 4px solid #6b7280;">
+                        <div style="font-size: 0.875rem; color: #111827;">
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">@InvoiceData.ShipTo?.Name</div>
+                            <div style="color: #4b5563; margin-bottom: 0.25rem;">@InvoiceData.ShipTo?.Address</div>
+                            <div style="color: #4b5563;">@InvoiceData.ShipTo?.Phone</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Items Table -->
+            <div style="margin-bottom: 2rem; flex: 1;">
+                <div style="background: white; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">
+                    <div style="background: #111827; color: white; padding: 0.5rem 1rem;">
+                        <h3 style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Items</h3>
+                    </div>
+                    <table style="width: 100%; table-layout: fixed; font-size: 0.75rem;">
+                        <thead style="background: #f3f4f6;">
+                            <tr>
+                                <th style="padding: 0.5rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 500; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; width: 40%;">Description</th>
+                                <th style="padding: 0.5rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 500; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; width: 15%;">Model</th>
+                                <th style="padding: 0.5rem 1rem; text-align: center; font-size: 0.75rem; font-weight: 500; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; width: 10%;">Qty</th>
+                                <th style="padding: 0.5rem 1rem; text-align: right; font-size: 0.75rem; font-weight: 500; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; width: 15%;">Price</th>
+                                <th style="padding: 0.5rem 1rem; text-align: right; font-size: 0.75rem; font-weight: 500; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; width: 20%;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody style="background: white;">
+                            @if (InvoiceData.Items != null)
+                            {
+                                @for (int i = 0; i < InvoiceData.Items.Count; i++)
+                                {
+                                    var item = InvoiceData.Items[i];
+                                    <tr style="border-top: 1px solid #e5e7eb;">
+                                        <td style="padding: 0.5rem 1rem; word-wrap: break-word;">
+                                            <div style="font-weight: 500; color: #111827;">@item.Name</div>
+                                            @if (!string.IsNullOrEmpty(item.Description))
+                                            {
+                                                <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem;">@item.Description</div>
+                                            }
+                                        </td>
+                                        <td style="padding: 0.5rem 1rem;">
+                                            <div style="font-size: 0.75rem; color: #4b5563;">@item.Model</div>
+                                        </td>
+                                        <td style="padding: 0.5rem 1rem; text-align: center;">
+                                            <span style="display: inline-flex; align-items: center; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; background: #d1d5db; color: #374151;">
+                                                @item.Quantity
+                                            </span>
+                                        </td>
+                                        <td style="padding: 0.5rem 1rem; text-align: right; font-weight: 500; color: #111827;">
+                                            @FormatCurrency(item.Amount, InvoiceData.SelectedCurrency)
+                                        </td>
+                                        <td style="padding: 0.5rem 1rem; text-align: right; font-weight: 600; color: #111827;">
+                                            @FormatCurrency(item.Total, InvoiceData.SelectedCurrency)
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Summary Section -->
+            <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
+                <div style="width: 320px;">
+                    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                        <div style="background: #111827; color: white; padding: 0.5rem 1rem;">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Summary</h4>
+                        </div>
+                        <div style="padding: 1rem; font-size: 0.875rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span style="color: #4b5563;">Subtotal:</span>
+                                <span style="font-weight: 500;">@FormatCurrency(InvoiceData.SubTotal, InvoiceData.SelectedCurrency)</span>
+                            </div>
+                            @if (InvoiceData.TaxPercentage > 0)
+                            {
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                    <span style="color: #4b5563;">Tax (@InvoiceData.TaxPercentage%):</span>
+                                    <span style="font-weight: 500;">@FormatCurrency(InvoiceData.TaxAmount, InvoiceData.SelectedCurrency)</span>
+                                </div>
+                            }
+                            <hr style="margin: 0.5rem 0; border: none; border-top: 1px solid #e5e7eb;">
+                            <div style="display: flex; justify-content: space-between; font-size: 1rem; font-weight: bold;">
+                                <span style="color: #111827;">Total:</span>
+                                <span style="color: #111827;">@FormatCurrency(InvoiceData.GrandTotal, InvoiceData.SelectedCurrency)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Notes Section -->
+            @if (!string.IsNullOrEmpty(InvoiceData.Notes))
+            {
+                <div style="margin-top: 2rem;">
+                    <div style="background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 8px; padding: 1rem;">
+                        <div style="display: flex; align-items: flex-start;">
+                            <span style="margin-right: 0.75rem; color: #6b7280; margin-top: 0.125rem;">📝</span>
+                            <div>
+                                <h4 style="font-size: 0.875rem; font-weight: 600; color: #111827; margin: 0 0 0.25rem 0;">Notes</h4>
+                                <p style="font-size: 0.875rem; color: #374151; margin: 0;">@InvoiceData.Notes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <!-- Footer: always at the bottom if space, or overflows to next page if not -->
+        <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid #e5e7eb; text-align: center; margin-bottom: 4rem;">
+            <p style="font-size: 0.75rem; color: #6b7280; margin: 0;">Thank you for your business!</p>
+        </div>
+    </div>
+</BaseTemplate>
+
+@code {
+    private InvoiceData InvoiceData => Data as InvoiceData ?? new InvoiceData();
+
+    private string FormatCurrency(decimal amount, string? currency)
+    {
+        // Always use USD formatting
+        return string.Format("{0:C}", amount);
+    }
+}

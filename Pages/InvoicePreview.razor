@@ -1,0 +1,106 @@
+@page "/invoice-preview/{templateNumber:int}"
+@using BlazorInvoiceGenerator.Utils
+@using BlazorInvoiceGenerator.Components
+@using BlazorInvoiceGenerator.Services
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@inject InvoiceDataService InvoiceDataService
+
+<PageTitle>Invoice Preview - Template @TemplateNumber</PageTitle>
+
+<div class="full-preview-page">
+    <div class="full-preview-header">
+        <h1>Invoice Preview - Template @TemplateNumber</h1>
+        <div class="full-preview-actions">
+            <NavLink class="btn btn-secondary" href="invoice-builder">
+                Back to Builder
+            </NavLink>
+            <NavLink class="btn btn-primary" href="@($"invoice-builder/{TemplateNumber}")">
+                Edit Invoice
+            </NavLink>
+            <button class="btn btn-success" @onclick="DownloadPDF">
+                Download PDF
+            </button>
+            <button class="btn btn-success" @onclick="PrintInvoice">
+                Print Invoice
+            </button>
+        </div>
+    </div>
+    
+    <div class="full-preview-content">
+        @for (int i = 1; i <= 13; i++)
+        {
+            <div id="template-preview-@i" style="@(i == TemplateNumber ? "" : "display:none;")">
+                <InvoiceTemplate TemplateNumber="@i" Data="@InvoiceData" />
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int TemplateNumber { get; set; }
+    
+    private InvoiceData InvoiceData { get; set; } = new InvoiceData
+    {
+        YourCompany = new CompanyInfo { Name = "Sample Company", Address = "123 Main St", Phone = "555-1234" },
+        Invoice = new InvoiceInfo { Number = "INV-001", Date = DateTime.Now, PaymentDate = DateTime.Now.AddDays(30) },
+        BillTo = new PersonInfo { Name = "John Doe", Address = "456 Elm St", Phone = "555-5678" },
+        ShipTo = new PersonInfo { Name = "Jane Smith", Address = "789 Oak St", Phone = "555-9012" },
+        Items = new List<ItemInfo> { new ItemInfo { Name = "Widget", Description = "A useful widget", Quantity = 2, Amount = 10.0m, Total = 20.0m } },
+        SubTotal = 20.0m,
+        TaxPercentage = 5.0m,
+        TaxAmount = 1.0m,
+        GrandTotal = 21.0m,
+        Notes = "Thank you for your business!",
+        SelectedCurrency = "USD"
+    };
+
+    protected override void OnParametersSet()
+    {
+        // Always get the latest invoice data when parameters change
+        var latest = InvoiceDataService.GetCurrentInvoiceData();
+        if (latest != null && !string.IsNullOrWhiteSpace(latest.YourCompany?.Name))
+        {
+            InvoiceData = latest;
+        }
+        // else keep the default sample data
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("invoice-builder", forceLoad: false);
+    }
+
+    private void EditInvoice()
+    {
+        // Navigate back to the builder with the current template selected
+        Navigation.NavigateTo($"invoice-builder/{TemplateNumber}", forceLoad: false);
+    }
+
+    private async Task DownloadPDF()
+    {
+        try 
+        {
+            // Use the same JS interop as Templates.razor for PDF generation
+            await JSRuntime.InvokeVoidAsync("generateTemplatePDF", TemplateNumber, InvoiceData);
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.WriteLine($"PDF Generation Error: {ex.Message}");
+        }
+    }
+
+    private async Task PrintInvoice()
+    {
+        try 
+        {
+            // Use JavaScript interop to print the invoice content, always pass both id and template number
+            await JSRuntime.InvokeVoidAsync("printInvoiceContent", $"template-preview-{TemplateNumber}", TemplateNumber);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Print Error: {ex.Message}");
+        }
+    }
+}

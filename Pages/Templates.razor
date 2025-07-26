@@ -1,0 +1,171 @@
+@page "/templates"
+@using BlazorInvoiceGenerator.Components
+@using BlazorInvoiceGenerator.Utils
+@using BlazorInvoiceGenerator.Services
+@inject NavigationManager Navigation
+@inject InvoiceDataService InvoiceDataService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Invoice Templates</PageTitle>
+
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-16">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h1 class="text-5xl md:text-6xl font-bold text-slate-800 mb-6">Invoice Templates</h1>
+            <p class="text-xl text-slate-600 max-w-3xl mx-auto">Choose from our collection of professionally designed invoice templates. Each template is carefully crafted to meet different business needs and visual preferences.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-12 max-w-7xl mx-auto">
+            @for (int i = 1; i <= 13; i++)
+            {
+                var templateNum = i;
+                <div class="group bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-slate-200 overflow-hidden">
+                    <!-- Template Header -->
+                    <div class="p-6 border-b border-slate-200">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-2xl font-bold text-slate-800">Template @templateNum</h3>
+                            <span class="px-3 py-1 bg-gradient-to-r @GetTemplateGradient(templateNum) text-white rounded-full text-xs font-semibold">
+                                @GetTemplateStyle(templateNum)
+                            </span>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="button" style="pointer-events: auto !important; position: relative; z-index: 20; background: linear-gradient(90deg, #a21caf 0%, #7c3aed 50%, #6366f1 100%); color: #fff; border-radius: 9999px; font-weight: 600; padding: 0.5rem 1.5rem; min-width: 140px; max-width: 220px; box-shadow: 0 4px 14px 0 rgba(80,0,120,0.10); transition: background 0.3s, transform 0.2s; display: inline-block; white-space: nowrap;" onmouseover="this.style.background='linear-gradient(90deg,#7c3aed 0%,#6366f1 100%)'" onmouseout="this.style.background='linear-gradient(90deg,#a21caf 0%,#7c3aed 50%,#6366f1 100%)'" @onclick="@(() => PrintPDF(templateNum))" @onclick:preventDefault="false" @onclick:stopPropagation="false">
+                                Download PDF
+                            </button>
+                            <NavLink class="ml-2 px-4 py-2 rounded bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-all duration-200" href="@($"invoice-builder?template={templateNum}")">
+                                Use This Template
+                            </NavLink>
+                        </div>
+                    </div>
+                    <!-- Template Preview -->
+                    <div class="template-showcase-container bg-gradient-to-br @GetTemplateGradient(templateNum) p-6" @onclick="@(() => PreviewTemplate(templateNum))">
+                        <div class="template-preview-full bg-white rounded-lg shadow-lg" id="template-preview-@templateNum">
+                            <div class="w-full h-full overflow-hidden">
+                                <InvoiceTemplate TemplateNumber="@templateNum" Data="@SampleData" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- CTA Section -->
+        <div class="text-center mt-20">
+            <NavLink style="background: linear-gradient(90deg, #a21caf 0%, #7c3aed 50%, #6366f1 100%); color: #fff; border-radius: 9999px; font-weight: 600; padding: 0.75rem 2.25rem; box-shadow: 0 6px 24px 0 rgba(80,0,120,0.18), 0 1.5px 4px 0 rgba(80,0,120,0.10); transition: background 0.3s, transform 0.18s, box-shadow 0.18s; min-width: 180px; max-width: 100%; width: fit-content; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; margin-left: auto; margin-right: auto; font-size: 1.05rem; line-height: 1.5; letter-spacing: 0.01em; margin-bottom: 1.5rem; border: none; outline: none; gap:0.5rem;" href="invoice-builder">
+                <svg style="width: 1.35em; height: 1.35em; min-width: 1.35em; min-height: 1.35em;" fill="currentColor" viewBox="0 0 20 20"><path d="M12 4v12l6-6-6-6z"/></svg>
+                Start Building Your Invoice
+            </NavLink>
+        </div>
+    </div>
+</div>
+
+@code {
+    private InvoiceData SampleData = new InvoiceData {
+        YourCompany = new CompanyInfo { Name = "Sample Company", Address = "123 Main St", Phone = "555-1234" },
+        Invoice = new InvoiceInfo { Number = "INV-001", Date = DateTime.Now, PaymentDate = DateTime.Now.AddDays(30) },
+        BillTo = new PersonInfo { Name = "John Doe", Address = "456 Elm St", Phone = "555-5678" },
+        ShipTo = new PersonInfo { Name = "Jane Smith", Address = "789 Oak St", Phone = "555-9012" },
+        Items = new List<ItemInfo> { 
+            new ItemInfo { Name = "Professional Service", Description = "Consulting and development work", Model = "PRO-2024", Quantity = 1, Amount = 250.0m, Total = 250.0m },
+            new ItemInfo { Name = "Additional Service", Description = "Extra support and maintenance", Model = "SUP-2024", Quantity = 2, Amount = 75.0m, Total = 150.0m }
+        },
+        SubTotal = 400.0m,
+        TaxPercentage = 8.5m,
+        TaxAmount = 34.0m,
+        GrandTotal = 434.0m,
+        Notes = "Thank you for your business! Payment terms: Net 30 days.",
+        SelectedCurrency = "USD"
+    };
+
+    private void UseTemplate(int templateNumber)
+    {
+        // Update the service with current sample data and navigate to invoice builder with template selected
+        InvoiceDataService.UpdateInvoiceData(SampleData);
+        Navigation.NavigateTo($"/invoice-builder?template={templateNumber}");
+    }
+
+    private void PreviewTemplate(int templateNumber)
+    {
+        // Update service with sample data and navigate to preview page
+        InvoiceDataService.UpdateInvoiceData(SampleData);
+        Navigation.NavigateTo($"/invoice-preview/{templateNumber}");
+    }
+
+    private async Task PrintPDF(int templateNumber)
+    {
+        // Call JS interop to generate PDF for the template preview
+        await JSRuntime.InvokeVoidAsync("generateTemplatePDF", templateNumber, SampleData);
+    }
+
+    // DownloadTemplatePDF: Only use the correct JS interop for print-matching PDF, with debug logging to browser console
+    private async Task DownloadTemplatePDF(int templateNumber)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("console.log", $"[Blazor] DownloadTemplatePDF called for template {templateNumber}");
+            var html = await JSRuntime.InvokeAsync<string>("getTemplateHtmlForPDF", templateNumber);
+            await JSRuntime.InvokeVoidAsync("console.log", $"[Blazor] getTemplateHtmlForPDF returned length: {html?.Length ?? 0}");
+            if (!string.IsNullOrEmpty(html))
+            {
+                await JSRuntime.InvokeVoidAsync("console.log", $"[Blazor] Calling generateTemplatePDF for template {templateNumber}");
+                await JSRuntime.InvokeVoidAsync("generateTemplatePDF", html, SampleData, templateNumber);
+                await JSRuntime.InvokeVoidAsync("console.log", $"[Blazor] generateTemplatePDF completed for template {templateNumber}");
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("console.error", $"[Blazor] No HTML found for template {templateNumber}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("console.error", $"[Blazor] PDF Generation Exception: {ex.Message}");
+        }
+    }
+
+    private void GoToBuilder()
+    {
+        Navigation.NavigateTo("invoice-builder");
+    }
+
+    private string GetTemplateGradient(int templateNumber)
+    {
+        return templateNumber switch
+        {
+            1 => "from-blue-400 to-blue-600",
+            2 => "from-slate-400 to-slate-600", 
+            3 => "from-emerald-400 to-emerald-600",
+            4 => "from-gray-400 to-gray-600",
+            5 => "from-slate-500 to-slate-700",
+            6 => "from-sky-400 to-sky-600",
+            7 => "from-indigo-400 to-indigo-600",
+            8 => "from-purple-400 to-purple-600",
+            9 => "from-teal-400 to-teal-600",
+            10 => "from-violet-400 to-violet-600",
+            11 => "from-rose-400 to-rose-600",
+            12 => "from-green-400 to-green-600",
+            13 => "from-red-400 to-yellow-300",
+            _ => "from-gray-400 to-gray-600"
+        };
+    }
+
+    private string GetTemplateStyle(int templateNumber)
+    {
+        return templateNumber switch
+        {
+            1 => "Classic Professional",
+            2 => "Minimal Clean", 
+            3 => "Modern Professional",
+            4 => "Simple & Clean",
+            5 => "Corporate Standard",
+            6 => "Contemporary Blue",
+            7 => "Sleek Modern",
+            8 => "Elegant Purple",
+            9 => "Fresh Green",
+            10 => "Creative Violet",
+            11 => "Bold Red",
+            12 => "Natural Green",
+            13 => "Modern Red",
+            _ => "Professional"
+        };
+    }
+}

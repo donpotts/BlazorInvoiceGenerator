@@ -1,0 +1,126 @@
+@namespace BlazorInvoiceGenerator.Components.Templates
+@inherits BaseTemplate
+@using BlazorInvoiceGenerator.Utils
+
+<BaseTemplate Data="@Data">
+    <div style="width: 816px; min-width: 816px; max-width: 816px; height: 1056px; min-height: 1056px; max-height: 1056px; margin: 0 auto; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; box-sizing: border-box; padding: 40px;">
+        <!-- Overlay Container for rounded look -->
+        <div style="background: white; border-radius: 24px; box-shadow: 0 4px 32px 0 rgba(59,130,246,0.10); width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box;">
+            <!-- Blue Header Section -->
+            <div style="background: #3b82f6; color: white; padding: 2rem 1.5rem 1.5rem 1.5rem; border-radius: 24px 24px 0 0; flex-shrink: 0;">
+                <!-- Top Row: Company and Billed To -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                    <div>
+                        <h1 style="font-size: 2rem; font-weight: bold; margin: 0 0 0.5rem 0;">@InvoiceData.YourCompany?.Name</h1>
+                        <p style="margin: 0; font-size: 0.9rem; display: flex; align-items: center;">
+                            <span style="margin-right: 0.5rem; color: #ffffff;">📍</span>
+                            <span>@InvoiceData.YourCompany?.Address</span>
+                        </p>
+                        <p style="margin: 0; font-size: 0.9rem; display: flex; align-items: center;">
+                            <span style="margin-right: 0.5rem; color: #ffffff;">📞</span>
+                            <span>@InvoiceData.YourCompany?.Phone</span>
+                        </p>
+                    </div>
+                    <div style="text-align: right;">
+                        <h2 style="font-size: 1.1rem; font-weight: 600; margin: 0 0 0.5rem 0;">BILLED TO</h2>
+                        <p style="margin: 0; font-size: 0.9rem;">@InvoiceData.BillTo?.Name</p>
+                        <p style="margin: 0; font-size: 0.9rem;">@InvoiceData.BillTo?.Address</p>
+                        <p style="margin: 0; font-size: 0.9rem;">@InvoiceData.BillTo?.Phone</p>
+                    </div>
+                </div>
+
+                <!-- Bottom Row: Ship To and Invoice Details -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h2 style="font-size: 1.1rem; font-weight: 600; margin: 0 0 0.5rem 0;">SHIP TO</h2>
+                        <p style="margin: 0; font-size: 0.9rem;">@InvoiceData.ShipTo?.Address</p>
+                        <p style="margin: 0; font-size: 0.9rem;">@InvoiceData.ShipTo?.Phone</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="margin: 0; font-size: 0.9rem;">Invoice #: @InvoiceData.Invoice?.Number</p>
+                        <p style="margin: 0; font-size: 0.9rem;">Invoice Date: @(InvoiceData.Invoice?.Date.ToString("yyyy-MM-dd") ?? "N/A")</p>
+                        <p style="margin: 0; font-size: 0.9rem;">Due Date: @(InvoiceData.Invoice?.PaymentDate.ToString("yyyy-MM-dd") ?? "N/A")</p>
+                        <p style="margin: 0; font-size: 0.9rem;">Due Amount: @FormatCurrency(InvoiceData.GrandTotal, InvoiceData.SelectedCurrency)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Section -->
+            <div style="flex: 1; display: flex; flex-direction: column; padding: 1.5rem; box-sizing: border-box; min-height: 0;">
+                <!-- Items Table -->
+                <div style="flex: 1; min-height: 0; margin-bottom: 1rem;">
+                    <!-- Items Table Header -->
+                    <div style="background: #dbeafe; padding: 0.75rem; display: flex; align-items: center; border-radius: 8px 8px 0 0; font-weight: 500; width: 100%;">
+                        <div style="width: 3rem;"></div>
+                        <div style="flex: 1; font-weight: 600; font-size: 0.9rem;">ITEM NAME / DESCRIPTION</div>
+                        <div style="width: 5rem; text-align: center; font-weight: 600; font-size: 0.9rem;">MODEL</div>
+                        <div style="width: 3rem; text-align: right; font-weight: 600; font-size: 0.9rem;">QTY.</div>
+                        <div style="width: 5rem; text-align: right; font-weight: 600; font-size: 0.9rem;">AMOUNT</div>
+                    </div>
+
+                    <!-- Items Rows -->
+                    @if (InvoiceData.Items != null)
+                    {
+                        @for (int i = 0; i < InvoiceData.Items.Count; i++)
+                        {
+                            var item = InvoiceData.Items[i];
+                            <div style="display: flex; align-items: flex-start; padding: 0.6rem; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem; width: 100%;">
+                                <div style="width: 3rem; padding-top: 0.25rem;">@((i + 1).ToString("D2"))</div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-weight: 600; word-break: break-word;">@item.Name</div>
+                                    <div style="font-size: 0.8rem; color: #6b7280; word-break: break-word;">@item.Description</div>
+                                </div>
+                                <div style="width: 5rem; text-align: center; padding-top: 0.25rem; word-break: break-word; font-size: 0.8rem;">@item.Model</div>
+                                <div style="width: 3rem; text-align: right; padding-top: 0.25rem;">@item.Quantity</div>
+                                <div style="width: 5rem; text-align: right; padding-top: 0.25rem; font-size: 0.85rem;">@FormatCurrency(item.Total, InvoiceData.SelectedCurrency)</div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <!-- Bottom Section: Notes and Totals in horizontal layout -->
+                <div style="display: flex; align-items: flex-start; gap: 1.5rem; margin-top: auto;">
+                    <!-- Notes Section -->
+                    <div style="flex: 1;">
+                        <h3 style="font-size: 1rem; font-weight: 600; margin: 0 0 0.5rem 0;">Notes</h3>
+                        <p style="font-size: 0.85rem; color: #6b7280; margin: 0;">@InvoiceData.Notes</p>
+                    </div>
+
+                    <!-- Totals Section -->
+                    <div style="min-width: 200px; flex-shrink: 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.9rem;">
+                            <span>Sub Total:</span>
+                            <span>@FormatCurrency(InvoiceData.SubTotal, InvoiceData.SelectedCurrency)</span>
+                        </div>
+                        @if (InvoiceData.TaxPercentage > 0)
+                        {
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.9rem;">
+                                <span>Tax (@InvoiceData.TaxPercentage%):</span>
+                                <span>@FormatCurrency(InvoiceData.TaxAmount, InvoiceData.SelectedCurrency)</span>
+                            </div>
+                        }
+                        <div style="background: #3b82f6; color: white; padding: 0.6rem; border-radius: 4px; display: flex; justify-content: space-between; font-weight: bold; font-size: 1rem; align-items: center;">
+                            <span>Total</span>
+                            <span>@FormatCurrency(InvoiceData.GrandTotal, InvoiceData.SelectedCurrency)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+                    <p style="font-size: 0.8rem; color: #3b82f6; margin: 0;">Thank you for your business!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</BaseTemplate>
+
+@code {
+    private InvoiceData InvoiceData => Data as InvoiceData ?? new InvoiceData();
+
+    private string FormatCurrency(decimal amount, string? currency)
+    {
+        // Always use USD formatting
+        return $"${amount:N2}";
+    }
+}

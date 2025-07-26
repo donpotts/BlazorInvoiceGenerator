@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36310.24
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorInvoiceGenerator", "BlazorInvoiceGenerator.csproj", "{44C0D196-6E68-8D6B-5944-8F869650DB6A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{44C0D196-6E68-8D6B-5944-8F869650DB6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44C0D196-6E68-8D6B-5944-8F869650DB6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44C0D196-6E68-8D6B-5944-8F869650DB6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44C0D196-6E68-8D6B-5944-8F869650DB6A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2A362DE9-9407-4951-94B7-DB1110E29561}
+	EndGlobalSection
+EndGlobal
