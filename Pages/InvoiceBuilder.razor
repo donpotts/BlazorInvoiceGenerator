@@ -369,7 +369,7 @@
     {
         // Ensure data is saved to service before navigation
         InvoiceDataService.UpdateInvoiceData(invoiceData);
-        Navigation.NavigateTo($"/invoice-preview/{selectedTemplate}");
+        Navigation.NavigateTo($"{Navigation.BaseUri}invoice-preview/{selectedTemplate}", forceLoad: true);
     }
 
     private async Task GeneratePDF()
