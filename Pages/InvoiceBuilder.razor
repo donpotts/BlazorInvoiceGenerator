@@ -230,9 +230,9 @@
                         <button class="btn btn-success" @onclick="GeneratePDF" style="margin-left: 0.5rem; font-size: 0.75rem; padding: 0.375rem 0.75rem;">
                             Download PDF
                         </button>
-                        <button class="btn btn-gradient" @onclick="PreviewInvoice" style="margin-left: 0.5rem; font-size: 0.75rem; padding: 0.375rem 0.75rem;">
+                        <NavLink class="btn btn-gradient" style="margin-left: 0.5rem; font-size: 0.75rem; padding: 0.375rem 0.75rem;" href="@($"invoice-preview/{selectedTemplate}")">
                             Full Preview
-                        </button>
+                        </NavLink>
                     </div>
                     <div class="preview-container" id="preview-container" style="overflow-y: auto;">
                         @for (int i = 1; i <= 13; i++)
@@ -363,13 +363,6 @@
         // Update the service with current data
         InvoiceDataService.UpdateInvoiceData(invoiceData);
         StateHasChanged();
-    }
-
-    private void PreviewInvoice()
-    {
-        // Ensure data is saved to service before navigation
-        InvoiceDataService.UpdateInvoiceData(invoiceData);
-        Navigation.NavigateTo($"{Navigation.BaseUri}invoice-preview/{selectedTemplate}", forceLoad: true);
     }
 
     private async Task GeneratePDF()
